@@ -1,0 +1,143 @@
+---
+title: "Project"
+params:
+  answers: true
+mainfont: Arial
+fontsize: 12pt
+urlcolor: blue
+output: 
+  html_document:
+    toc: true
+    toc_depth: 1
+    toc_float: true
+    theme: paper
+  pdf_document:
+    toc: true
+    toc_depth: 1
+    latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r packages, warning = FALSE, message = FALSE}
+library(ISLR)
+library(glmnet)
+library(tidyverse)
+set.seed(60)
+```
+
+```{r}
+insurance <- read.csv("insurance.csv")
+#nrow(insurance) = 1338
+#nrow(insurance)*0.5 = 669
+#nrow(insurance)*0.3 = 401
+#nrow(insurance)*0.2 = 268
+splits <- c(rep("train",669), rep("validation",401), rep("test", 268))
+set.seed(60); insurance <- mutate(insurance, splits=sample(splits))   #we use set.seed to have exact same permutation of the vector splits
+insurance_train <- insurance %>% filter(splits=="train")
+insurance_valid <- insurance %>% filter(splits=="validation")
+insurance_test <- insurance %>% filter(splits=="test")
+
+
+```
+
+```{r hist}
+ ggplot() + 
+  geom_density(data = insurance_train, mapping = aes(x = charges), alpha = 0.3, colour = "Blue") + 
+  geom_density(data = insurance_valid, mapping = aes(x = charges), alpha = 0.3, colour = "Red") + 
+  geom_density(data = insurance_test,  mapping = aes(x = charges), alpha = 0.3, colour = "Green") 
+```
+```{r lmmse1, eval = FALSE}
+lm_mse <- function(formula, train_data, valid_data) {
+  y_name <- as.character(formula)[2]
+  y_true <- valid_data[[y_name]]
+  
+  model_1 <- lm(formula, data = train_data)
+  mean((y_true - predict(model_1, newdata=valid_data))^2)
+ }
+
+
+```
+
+```{r lmmse3}
+lm_mse(charges ~ age + smoker, insurance_train, insurance_valid)
+```
+
+```{r src}
+source("generate_formulas.R")
+```
+
+```{r enum}
+x.vars <- colnames(insurance)
+x.vars <- x.vars[x.vars!=c("charges","splits")]  #we do not what a variable charges (because we are predicting this one) and splits (because we made this column)
+formulas <- generate_formulas(3, x.vars, "charges")
+length(formulas)
+```
+
+```{r forloop, warning = FALSE, message = FALSE}
+mses_3 <- NULL
+
+for (i in 1:length(formulas)) {
+  mses_new <- lm_mse(as.formula(formulas[i]), insurance_train, insurance_valid)
+  mses_3 <- c(mses_3, mses_new)
+}
+formulas[which.min(mses_3)]
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
